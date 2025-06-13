@@ -1,0 +1,38 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Start
+ |
+ v
+[Node 1: Resume Data Extraction Service]
+ |
+ v
+[Node 2: JD Analysis Agent]
+ |
+ v
+[Router Node]:
+    - if JD_Score < Threshold --> Reject & Log
+    - else --> Continue
+ |
+ v
+[Node 3: Company Values & Cultural Fit Agent]
+ |
+ v
+[Node 4: Uniqueness & Custom Criteria Agent]
+ |
+ v
+[Node 5: Absolute Rating Computation]
+ |
+ v
+[Node 6: Boundary Case Detection]
+ |
+ v
+[Node 7: Relative Ranking Across Candidates]
+ |
+ v
+[Node 8: Screening Question Generator]
+ |
+ v
+[Output API → UI]

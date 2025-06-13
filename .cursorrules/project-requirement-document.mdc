@@ -1,0 +1,256 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Excellent — your document has a very solid structure, but as you correctly mentioned, it will benefit a lot from refinement for AI coding agents (Cursor, Devin, etc.).
+These agents work better when the requirements are:
+	•	Deterministic
+	•	Explicit in data flows
+	•	Clearly modularized into components/services
+	•	Properly annotated where human judgment is allowed
+	•	Have minimal ambiguity
+
+Let me now refine your entire Project Requirements Document into AI Agent-Friendly format:
+
+⸻
+
+📌 Project Requirements Document: Pickwise
+
+📝 Project Overview
+
+Build an AI-powered Resume Screening System leveraging RAG (Retrieval Augmented Generation), LangChain, and LangGraph that ingests resumes, processes them into structured JSON data, evaluates them against job descriptions, company values, and custom heuristics, ranks candidates, and generates screening questions.
+
+⸻
+
+1️⃣ Functional User Stories
+
+✅ Core Functionalities
+	•	As HR, I want to automatically highlight standout resumes.
+	•	As HR, I want top-N resumes filtered based on multiple job-specific and company-specific criteria.
+	•	As HR, I want resumes categorized into 4 buckets: Top, Go-After, Consider, Sink.
+	•	As HR, I want each candidate to be scored and ranked based on:
+	•	Job Description match
+	•	Past success alignment
+	•	Company core values alignment
+	•	Uniqueness & standout factors
+	•	Achievements
+	•	As HR, I want system-generated dynamic screening questions targeting candidate-provided resume content.
+	•	As HR, I want ability to compare two resumes side-by-side with system-generated summaries & insights.
+
+⸻
+
+2️⃣ System Architecture & Components
+
+A. Resume Data Extraction Service (Pre-Processor Agent)
+
+📌 Purpose:
+
+Extract structured fields from uploaded resume PDFs into a deterministic JSON format.
+
+📌 Input:
+	•	Resume PDFs (stored in S3)
+
+📌 Output:
+	•	Extracted JSON files (stored back into S3)
+
+📌 Process:
+	•	Process PDFs in parallel batches.
+	•	Use OpenAI GPT-4o API with structured prompts and predefined JSON schema.
+	•	Design idempotent extraction to ensure reproducibility.
+
+📌 Example JSON Schema (for agents to follow):
+
+{
+  "full_name": "",
+  "contact_details": {
+    "email": "",
+    "phone": "",
+    "linkedin": ""
+  },
+  "education": [
+    {"degree": "", "institution": "", "year": ""}
+  ],
+  "work_experience": [
+    {"company": "", "role": "", "duration": "", "key_achievements": ""}
+  ],
+  "skills": [],
+  "certifications": [],
+  "awards": [],
+  "projects": [],
+  "publications": [],
+  "summary": "",
+  "languages": []
+}
+
+📌 Notes for AI Agents:
+	•	Use strict key mapping.
+	•	Fuzzy entity extraction allowed but store confidence scores if applicable.
+	•	Always log parsing errors for non-standard resumes.
+
+⸻
+
+B. Resume Evaluation Multi-Agent Service (Main LangGraph Pipeline)
+
+📌 Exposure:
+	•	API Endpoint for orchestration of evaluation pipeline.
+
+📌 Input Payload:
+
+{
+  "resume_url": "<S3-JSON URL>",
+  "job_description_url": "<S3-JD File URL>",
+  "company_values_url": "<S3-CompanyValues File URL>",
+  "example_resume_insights_output_template_url": "<S3-Template URL>",
+  "past_successes_insight_document": "<S3-PastSuccessDoc URL>"
+}
+
+📌 Pipeline Nodes (LangGraph Nodes)
+
+⸻
+
+Node 1: JD Analysis Agent
+	•	Input: Job Description File
+	•	Output: JD alignment score (0-10), alignment justification
+	•	Logic:
+	•	Identify mandatory vs nice-to-have skills.
+	•	Extract weights for each skill.
+	•	Provide score breakdown.
+
+LangChain Thought Process Prompt Tip
+	•	"Think step-by-step. First extract skill list. Then assign weights. Then compute alignment factor."
+
+⸻
+
+Node 2: Routing Decision
+	•	Logic:
+	•	If JD alignment score below threshold (e.g. < 5), mark as REJECTED.
+	•	Else forward to next nodes.
+	•	Output: Either
+
+{ "verdict": "REJECTED", "reason": "<Explain why>" }
+
+or continue pipeline.
+
+⸻
+
+Node 3: Company Values + Cultural Fit Agent
+	•	Input: Company values file + Resume data
+	•	Output: Cultural fit score (0-10), justification text.
+	•	Logic:
+	•	Match behavioral signals, soft skills, value alignment.
+
+⸻
+
+Node 4: Uniqueness & Custom Criteria Agent
+	•	Input: Resume data
+	•	Output: Uniqueness score (0-10), justification text.
+	•	Logic:
+	•	Detect standout achievements, unique skills, rare combinations.
+
+⸻
+
+Node 5: Absolute Rating Computation
+	•	Input: Scores from Node 1, Node 3, Node 4.
+	•	Logic:
+	•	Calculate weighted composite score.
+	•	Suggested weightage (can be parameterized):
+	•	JD Score: 50%
+	•	Cultural Fit: 30%
+	•	Uniqueness: 20%
+	•	Output:
+
+{
+  "final_score": 7.6,
+  "verdict": "PASS",
+  "boundary_case_flag": true
+}
+
+
+⸻
+
+Node 6: Relative Ranking (Across Resumes)
+	•	Logic:
+	•	Compare all candidate scores.
+	•	Produce relative ranking table.
+	•	Categorize into:
+	•	Top
+	•	Go-After
+	•	Consider
+	•	Sink
+	•	Output: Tabular output with ranks and categories.
+
+⸻
+
+Node 7: Screening Question Generator
+	•	Input: Candidate's extracted data.
+	•	Output: List of custom screening questions.
+	•	Logic:
+	•	Identify areas needing clarification.
+	•	Generate 3-5 second-order questions.
+
+⸻
+
+3️⃣ Design Principles
+	•	✅ Deterministic scoring — avoid random fluctuation on repeated inputs.
+	•	✅ Modular chain-of-thought prompts for higher stability.
+	•	✅ Fully auditable decision-making with justification logs.
+	•	✅ HR boundary-case override capability retained.
+
+⸻
+
+4️⃣ Tech Stack Recommendations
+
+Component	Technology
+LLM Calls	OpenAI GPT-4o
+LangChain	LangGraph Orchestration
+Storage	AWS S3
+Parallel Processing	AWS Lambda + S3 Triggers
+Backend	FastAPI / Node.js
+UI	React + Tailwind
+
+
+⸻
+
+5️⃣ Engineering Tasks
+
+🔧 Resume Data Extraction Service
+	•	Batch processing of uploaded PDFs.
+	•	Use OpenAI GPT-4o + extraction prompt → JSON schema.
+	•	Store output in S3 (with versioning).
+	•	Parallelize using batching/Lambda triggers.
+
+🔧 Build LangGraph Multi-Agent Pipeline (MVP)
+	•	Setup nodes as per design above.
+	•	Tune prompts for determinism.
+	•	Build routing & scoring logic.
+	•	Build backend API endpoints to trigger full evaluation chain.
+
+🔧 Develop UI & Integrations
+	•	Display:
+	•	Resume scores
+	•	Rankings table
+	•	Category buckets
+	•	Screening questions
+	•	Resume comparison tool
+
+⸻
+
+6️⃣ Prompt Engineering Notes (for LLM Agents)
+	•	Use strict thought decomposition:
+1️⃣ Extract → 2️⃣ Reason → 3️⃣ Score → 4️⃣ Justify
+	•	Include system instructions like:
+
+"Never guess if uncertain; output 'UNKNOWN' field with low confidence score."
+
+	•	Build reusable prompt templates for each evaluation node.
+
+⸻
+
+7️⃣ Non-Functional Considerations
+	•	Reproducibility of scoring
+	•	Prompt versioning control
+	•	API latency considerations
+	•	Resume template edge case handling
+	•	Logging of each scoring sub-decision for audits
+
