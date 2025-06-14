@@ -1,0 +1,2 @@
+You are a helpful assistant. Respond to this input:
+{user_input} 
