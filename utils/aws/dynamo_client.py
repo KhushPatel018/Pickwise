@@ -1,80 +1,122 @@
 """
-DynamoDB client utility for handling database operations.
+DynamoDB client for AWS operations.
 """
+import boto3
+import os
 import logging
 from typing import Dict, Any, Optional, List
-import boto3
 from botocore.exceptions import ClientError
+from ..config import load_config
 
 logger = logging.getLogger(__name__)
 
 class DynamoClient:
-    def __init__(self, table_name: str):
-        """
-        Initialize DynamoDB client with table name.
+    def __init__(self):
+        """Initialize DynamoDB client with AWS credentials from environment variables."""
+        # Load environment configuration
+        load_config()
         
-        Args:
-            table_name (str): Name of the DynamoDB table
-        """
-        self.dynamodb = boto3.resource('dynamodb')
-        self.table = self.dynamodb.Table(table_name)
+        # Get AWS credentials from environment variables
+        aws_access_key = os.getenv('AWS_ACCESS_KEY_ID')
+        aws_secret_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+        aws_region = os.getenv('AWS_REGION', 'us-east-1')
+        aws_session_token = os.getenv('AWS_SESSION_TOKEN')
+
+        # Configure AWS session
+        session = boto3.Session(
+            aws_access_key_id=aws_access_key,
+            aws_secret_access_key=aws_secret_key,
+            aws_session_token=aws_session_token,
+            region_name=aws_region
+        )
+
+        # Initialize DynamoDB client
+        self.dynamo = session.client('dynamodb')
+        self.table_name = os.getenv('DYNAMODB_TABLE_NAME')
+        logger.info("DynamoDB client initialized successfully")
 
     def get_item(self, key: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
-        Get item from DynamoDB table.
+        Get an item from DynamoDB.
         
         Args:
-            key (Dict[str, Any]): Primary key of the item
+            key: Primary key of the item to get
             
         Returns:
-            Optional[Dict[str, Any]]: Item data or None if error
+            Dict containing item data or None if not found
         """
         try:
-            response = self.table.get_item(Key=key)
+            response = self.dynamo.get_item(
+                TableName=self.table_name,
+                Key=key
+            )
             return response.get('Item')
-        except ClientError as e:
-            logger.error(f"Error getting item from table {self.table.name}: {str(e)}")
+        except Exception as e:
+            logger.error(f"Failed to get item from DynamoDB: {str(e)}")
             return None
 
     def put_item(self, item: Dict[str, Any]) -> bool:
         """
-        Put item in DynamoDB table.
+        Put an item in DynamoDB.
         
         Args:
-            item (Dict[str, Any]): Item to store
+            item: Item to put
             
         Returns:
             bool: True if successful, False otherwise
         """
         try:
-            self.table.put_item(Item=item)
+            self.dynamo.put_item(
+                TableName=self.table_name,
+                Item=item
+            )
             return True
-        except ClientError as e:
-            logger.error(f"Error putting item in table {self.table.name}: {str(e)}")
+        except Exception as e:
+            logger.error(f"Failed to put item in DynamoDB: {str(e)}")
             return False
 
-    def update_item(self, key: Dict[str, Any], update_expression: str, 
-                   expression_values: Dict[str, Any]) -> bool:
+    def update_item(self, key: Dict[str, Any], update_expression: str, expression_values: Dict[str, Any]) -> bool:
         """
-        Update item in DynamoDB table.
+        Update an item in DynamoDB.
         
         Args:
-            key (Dict[str, Any]): Primary key of the item
-            update_expression (str): Update expression
-            expression_values (Dict[str, Any]): Expression attribute values
+            key: Primary key of the item to update
+            update_expression: Update expression
+            expression_values: Expression attribute values
             
         Returns:
             bool: True if successful, False otherwise
         """
         try:
-            self.table.update_item(
+            self.dynamo.update_item(
+                TableName=self.table_name,
                 Key=key,
                 UpdateExpression=update_expression,
                 ExpressionAttributeValues=expression_values
             )
             return True
-        except ClientError as e:
-            logger.error(f"Error updating item in table {self.table.name}: {str(e)}")
+        except Exception as e:
+            logger.error(f"Failed to update item in DynamoDB: {str(e)}")
+            return False
+
+    def delete_item(self, key: Dict[str, Any]) -> bool:
+        """
+        Delete an item from DynamoDB.
+        
+        Args:
+            key: Primary key of the item to delete
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            self.dynamo.delete_item(
+                TableName=self.table_name,
+                Key=key
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Failed to delete item from DynamoDB: {str(e)}")
             return False
 
     def query(self, key_condition_expression: str, 
@@ -90,42 +132,12 @@ class DynamoClient:
             List[Dict[str, Any]]: List of matching items
         """
         try:
-            response = self.table.query(
+            response = self.dynamo.query(
+                TableName=self.table_name,
                 KeyConditionExpression=key_condition_expression,
                 ExpressionAttributeValues=expression_values
             )
             return response.get('Items', [])
         except ClientError as e:
-            logger.error(f"Error querying table {self.table.name}: {str(e)}")
+            logger.error(f"Error querying table {self.table_name}: {str(e)}")
             return []
-
-def update_candidate_status(
-    dynamo_client,
-    candidate_id: str,
-    status: str,
-    message: str,
-    score: float
-) -> None:
-    """
-    Update candidate status in DynamoDB.
-    
-    Args:
-        dynamo_client: DynamoDB client instance
-        candidate_id: Candidate ID
-        status: Final status
-        message: Status message
-        score: Final score
-    """
-    try:
-        dynamo_client.update_item(
-            key={'candidate_id': candidate_id},
-            update_expression='SET #status = :status, message = :message, final_score = :score',
-            expression_values={
-                ':status': status,
-                ':message': message,
-                ':score': score
-            }
-        )
-    except Exception as e:
-        logger.error(f"Failed to update final status in database: {str(e)}")
-        raise 

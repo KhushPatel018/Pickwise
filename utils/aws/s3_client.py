@@ -1,102 +1,104 @@
 """
-AWS S3 client utilities for the resume processor workflow.
+S3 client for AWS operations.
 """
-import logging
-import json
-from typing import Dict, Any, List
 import boto3
-from botocore.exceptions import ClientError
+import os
+import json
+import logging
+from typing import Dict, Any, Optional, List
+from urllib.parse import urlparse
+from ..config import load_config
 
 logger = logging.getLogger(__name__)
 
 class S3Client:
-    def __init__(self, bucket_name: str = None):
-        """
-        Initialize S3 client.
+    def __init__(self):
+        """Initialize S3 client with AWS credentials from environment variables."""
+        # Load environment configuration
+        load_config()
         
-        Args:
-            bucket_name: Optional bucket name, will use default if not provided
-        """
-        self.s3 = boto3.client('s3')
-        self.bucket_name = bucket_name
+        # Get AWS credentials from environment variables
+        aws_access_key = os.getenv('AWS_ACCESS_KEY_ID')
+        aws_secret_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+        aws_region = os.getenv('AWS_REGION', 'us-east-1')
+        aws_session_token = os.getenv('AWS_SESSION_TOKEN')
 
-    def batch_get_objects(self, s3_urls: List[str]) -> Dict[str, Any]:
+        # Configure AWS session
+        session = boto3.Session(
+            aws_access_key_id=aws_access_key,
+            aws_secret_access_key=aws_secret_key,
+            aws_session_token=aws_session_token,
+            region_name=aws_region
+        )
+
+        # Initialize S3 client
+        self.s3 = session.client('s3')
+        logger.info("S3 client initialized successfully")
+
+    def batch_get_objects(self, keys: List[str]) -> Dict[str, Any]:
         """
-        Get multiple objects from S3 in a single batch request.
+        Fetch multiple objects from S3 in a single request.
         
         Args:
-            s3_urls: List of S3 URLs to fetch
+            keys: List of S3 keys to fetch
             
         Returns:
-            Dict[str, Any]: Dictionary mapping S3 URLs to their contents
-            
-        Raises:
-            Exception: If any object cannot be fetched
+            Dict mapping URLs to their contents
         """
         try:
-            result = {}
-            for url in s3_urls:
-                bucket, key = self._parse_s3_url(url)
-                response = self.s3.get_object(Bucket=bucket, Key=key)
-                result[url] = response
-            return result
-        except ClientError as e:
-            logger.error(f"Failed to fetch objects from S3: {str(e)}")
-            raise Exception(f"S3 batch get failed: {str(e)}")
+            results = {}
+            for key in keys:
+                response = self.s3.get_object(Bucket=os.getenv('S3_BUCKET_NAME'), Key=key)
+                results[key] = response
+            return results
+        except Exception as e:
+            logger.error(f"Failed to batch get objects: {str(e)}")
+            raise
 
     def save_analysis(self, key: str, analysis_data: Dict[str, Any]) -> bool:
         """
         Save analysis results to S3.
         
         Args:
-            key: S3 key to save the analysis
+            key: S3 key to save to
             analysis_data: Analysis data to save
             
         Returns:
             bool: True if successful, False otherwise
         """
         try:
-            # Convert analysis data to JSON with proper formatting
-            json_data = json.dumps(analysis_data, indent=2)
-            
-            # Upload to S3
             self.s3.put_object(
-                Bucket=self.bucket_name,
+                Bucket=os.getenv('S3_BUCKET_NAME'),
                 Key=key,
-                Body=json_data,
+                Body=json.dumps(analysis_data, indent=2),
                 ContentType='application/json'
             )
-            
-            logger.info(f"Successfully saved analysis to {key}")
             return True
-            
         except Exception as e:
-            logger.error(f"Failed to save analysis to S3: {str(e)}")
+            logger.error(f"Failed to save analysis: {str(e)}")
             return False
 
-    def get_object(self, key: str) -> Dict[str, Any]:
+    def get_object(self, bucket: str, key: str) -> Optional[Dict[str, Any]]:
         """
         Get a single object from S3.
         
         Args:
-            key: S3 key to fetch
+            bucket: S3 bucket name
+            key: S3 object key
             
         Returns:
-            Dict[str, Any]: Object contents
-            
-        Raises:
-            Exception: If object cannot be fetched
+            Dict containing object data or None if not found
         """
         try:
-            response = self.s3.get_object(Bucket=self.bucket_name, Key=key)
+            response = self.s3.get_object(Bucket=bucket, Key=key)
             return json.loads(response['Body'].read().decode('utf-8'))
-        except ClientError as e:
-            logger.error(f"Failed to fetch object {key} from S3: {str(e)}")
-            raise Exception(f"S3 get failed: {str(e)}")
+        except Exception as e:
+            logger.error(f"Failed to get object {key} from bucket {bucket}: {str(e)}")
+            return None
 
-    def put_object(self, key: str, data: Dict[str, Any]) -> bool:
+    def put_object(self, key: str, data: str) -> bool:
         """
-        Put a single object to S3.
+        Put an object in S3.
         
         Args:
             key: S3 key to save to
@@ -106,46 +108,16 @@ class S3Client:
             bool: True if successful, False otherwise
         """
         try:
-            json_data = json.dumps(data, indent=2)
             self.s3.put_object(
-                Bucket=self.bucket_name,
+                Bucket=os.getenv('S3_BUCKET_NAME'),
                 Key=key,
-                Body=json_data,
+                Body=data,
                 ContentType='application/json'
             )
             return True
         except Exception as e:
-            logger.error(f"Failed to put object {key} to S3: {str(e)}")
+            logger.error(f"Failed to put object {key}: {str(e)}")
             return False
-
-    def _parse_s3_url(self, url: str) -> tuple[str, str]:
-        """
-        Parse S3 URL into bucket and key.
-        
-        Args:
-            url: S3 URL (s3://bucket/key)
-            
-        Returns:
-            tuple[str, str]: (bucket, key)
-            
-        Raises:
-            ValueError: If URL is invalid
-        """
-        try:
-            # Remove s3:// prefix if present
-            if url.startswith('s3://'):
-                url = url[5:]
-            
-            # Split into bucket and key
-            parts = url.split('/', 1)
-            if len(parts) != 2:
-                raise ValueError(f"Invalid S3 URL format: {url}")
-                
-            return parts[0], parts[1]
-            
-        except Exception as e:
-            logger.error(f"Failed to parse S3 URL {url}: {str(e)}")
-            raise ValueError(f"Invalid S3 URL: {url}")
 
     def delete_object(self, key: str) -> bool:
         """
@@ -159,10 +131,10 @@ class S3Client:
         """
         try:
             self.s3.delete_object(
-                Bucket=self.bucket_name,
+                Bucket=os.getenv('S3_BUCKET_NAME'),
                 Key=key
             )
             return True
-        except ClientError as e:
-            logger.error(f"Error deleting object {key} from bucket {self.bucket_name}: {str(e)}")
+        except Exception as e:
+            logger.error(f"Error deleting object {key}: {str(e)}")
             return False 
