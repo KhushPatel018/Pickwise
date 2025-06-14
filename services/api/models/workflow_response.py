@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from typing import Dict, Any
-
+from typing import Dict, Any, Optional
 class WorkflowResponse(BaseModel):
-    success: bool
-    result: Dict[str, Any]
-    message: str 
+    status_code: int
+    description: str
+    error_message: Optional[str] = None
+    data: Dict[str, Any]

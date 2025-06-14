@@ -9,20 +9,56 @@ Start
  |
  v
 [Node 1: Input Validator Node :  Checks every thing is ok in initial state input]
+Fetces the resume content and Job description from s3 bucket and ensures they are in right json format and schema if not then logs the error and terminate the execution stating error messgaes why we have stoped execution on this and makes DB entry resume proccessor table.
  |
  v
+
 [Node 2: JD Analysis Agent]
+INPUT : 
+Resume data json 
+Job Description json
+this agent analyse the resume based on the provided JD. both will come from state which will be added by the node. we will use the OpenAI LLM (GPT-40 mini) with custom temprature and Top P settings. 
+we will use jd-agent-prompt to produce output in certain format, 
+then will procces that output scores   
+-> save the entire output to dedicated s3 bucket 
+-> update the state with scores 
+-> update the database entry of the candidate
+
  |
  v
 [Router Node]:
     - if JD_Score < Threshold --> Reject & Log
     - else --> Continue
+
+    This node makes decision on the resume according to Threshold should we  ontinue the further processing of this resume or not
+
+    if rejected make the database call to update the status and verdict comment and terminate the workflow.  
+    if meets the critiria pass it to next node for further analysis
  |
  v
+
 [Node 3: Cultural Agent :  analyses Cultural fit check, Uniqueness & Custom Criteria]
+INPUT : 
+(Pickup from state )
+Company Core Values
+Uniqueness description json
+custom criterias json array
+
+this agent analyse the resume based on the cultural values, uniqueness and custom critireas . we will use the OpenAI LLM (GPT-40 mini) with custom temprature and Top P settings. we will use cultural-agent to produce output in certain format, the will 
+procces that output scores
+-> save the entire json output to dedicated s3 bucket 
+-> update the state with scores(here we will have multiple scores like cultural-fit-score, uniqueness_score, custom_criteria_scores)
+-> update the database entry of the candidate
  |
  v
 [Node 4:  Absolute Rating Computation :  based on the weights and scores computed from above two agents create absolute score]
+this agents job would be calculate the absolute rank based on the weights for each skill score taken from above two agent nodes
+based on calculate scores 
+we will have threshhold and error boundery two numbers 
+we will 3 type of groups update the status and scores in db
+1. below  threshhold - error boundry [rejected]
+2. above threshhold + error boundry [selected]
+3. in between above two [in_consideration]
  |
  v
  END
