@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 Excellent — your document has a very solid structure, but as you correctly mentioned, it will benefit a lot from refinement for AI coding agents (Cursor, Devin, etc.).
 These agents work better when the requirements are:

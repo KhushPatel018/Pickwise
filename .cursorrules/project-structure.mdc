@@ -3,3 +3,99 @@ description:
 globs: 
 alwaysApply: true
 ---
+# Project Structure Rules for LangGraph Multi-Agent System
+
+## 1. Folder Layout (MUST follow)
+
+- `agents/`  
+  - Each agent (function, class, or graph node) gets its own file.  
+  - All agent logic (including prompt loading and model calling) lives here.
+  - If an agent is complex, make a subfolder.
+
+- `workflows/`
+  - Each workflow or LangGraph state graph is a file here.
+  - Workflows orchestrate agents, define flow, and handle data passing.
+
+- `prompts/`
+  - Store all prompt templates here (`.txt`, `.j2`, or `.py`).
+  - Use a separate loader to fetch templates.
+  - Prompt versions must be kept for tracking changes.
+
+- `schemas/`
+  - All Pydantic/BaseModel data schemas go here (inputs, outputs, states).
+  - No business logic; only data contracts.
+
+- `services/`
+  - Wrappers for external services/APIs (OpenAI, DBs, storage, 3rd party).
+  - Never put direct business logic or prompts here.
+
+- `utils/`
+  - Pure helper functions: config, logging, file utils.
+  - Nothing domain-specific.
+
+- `tests/`
+  - All tests (unit, integration) go here.
+  - Tests should mirror the project structure.
+
+- `main.py`
+  - The only root-level Python file.
+  - Entry point for CLI/web app/demo; minimal logic.
+
+- `.env`
+  - Store secrets/config here (never commit real keys).
+  - All env variables must be loaded via config.
+
+## 2. General Rules
+
+- **No direct calls to LLM APIs or prompt strings outside `agents/` and `services/`!**
+- **No business logic in `schemas/`, `utils/`, or `services/`!**
+- **No circular imports.**
+- **Keep each agent and workflow modular and single-responsibility.**
+- **Each agent and workflow must have a module-level docstring describing:**
+  - Purpose
+  - Inputs/outputs
+  - External dependencies
+
+## 3. Prompt Engineering
+
+- All prompts must be in `/prompts/` as files, never inline strings.
+- Prompt versions should be tracked (e.g., `resume_prompt_v2.txt`).
+- Dynamic prompt generation logic (if any) must be in `prompts/`.
+
+## 4. Data & Type Contracts
+
+- Use Pydantic for all inputs/outputs that cross agent or workflow boundaries.
+- Validate data before passing between agents/workflows.
+
+## 5. Configuration & Secrets
+
+- Store secrets in `.env`; load via `os.environ` or `python-dotenv`.
+- Never commit real secrets; use placeholder values for public repos.
+
+## 6. Testing
+
+- Use `pytest` or `unittest`.
+- Every agent and workflow must have at least one test.
+- Use mocks/stubs for external API calls.
+
+## 7. Extending the Project
+
+- To add an agent:  
+  - Create a new file in `agents/`
+  - Add corresponding prompt and schema files as needed.
+  - Write or extend tests.
+
+- To add a workflow:  
+  - Create a new file in `workflows/`
+  - Use/import agents and schemas; avoid duplicating logic.
+
+## 8. Naming Conventions
+
+- Use `snake_case` for files, functions, and variables.
+- Use `CamelCase` for class names.
+- Prefix all agent files with `_agent.py` if possible for clarity.
+
+---
+
+**These rules ensure maintainability, scalability, and easy AI/auto-generation of new modules.  
+If in doubt, ASK or consult this file before changing structure.**

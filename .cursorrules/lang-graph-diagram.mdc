@@ -3,10 +3,12 @@ description:
 globs: 
 alwaysApply: true
 ---
+RESUME PREPROCESSOR Workflow
+
 Start
  |
  v
-[Node 1: Resume Data Extraction Service]
+[Node 1: Input Validator Node :  Checks every thing is ok in initial state input]
  |
  v
 [Node 2: JD Analysis Agent]
@@ -17,22 +19,20 @@ Start
     - else --> Continue
  |
  v
-[Node 3: Company Values & Cultural Fit Agent]
+[Node 3: Cultural Agent :  analyses Cultural fit check, Uniqueness & Custom Criteria]
  |
  v
-[Node 4: Uniqueness & Custom Criteria Agent]
+[Node 4:  Absolute Rating Computation :  based on the weights and scores computed from above two agents create absolute score]
  |
  v
-[Node 5: Absolute Rating Computation]
- |
- v
-[Node 6: Boundary Case Detection]
- |
- v
-[Node 7: Relative Ranking Across Candidates]
- |
- v
-[Node 8: Screening Question Generator]
- |
- v
-[Output API → UI]
+ END
+ 
+ Here after human intervantion we will have the final list of resumes
+ Relative ranking & Screening questions workflow 
+ Start
+   | 
+Relative Ranking Agent
+   |
+ Screening quastions generator 
+   |   
+  END
