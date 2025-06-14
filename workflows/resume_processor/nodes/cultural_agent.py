@@ -11,6 +11,10 @@ from utils.s3_client import S3Client
 from utils.dynamo_client import DynamoClient
 from ..state import ResumeProcessorState, update_state, add_tool_message
 from prompts.cultural_agent_prompt import CULTURAL_AGENT_PROMPT
+import os
+from utils.config import load_config
+
+load_config()
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +79,7 @@ class CulturalAgent:
 
             # Save analysis to S3 & DynamoDB
             try:
-                analysis_key = f"{state['job_id']}/{state['candidate_id']}/cultural_analysis.json"
+                analysis_key = f"s3://{os.getenv('S3_BUCKET_NAME')}/{state['job_id']}/{state['candidate_id']}/cultural_analysis.json"
                 if not self.s3_client.put_object(analysis_key, json.dumps(analysis_data, indent=2)):
                     logger.error(f"[Cultural Agent] Failed to save cultural analysis to S3: {analysis_key} with error: {str(e)}")
                     state['error_message'] = f"[Cultural Agent] Failed to save cultural analysis to S3: {analysis_key} with error: {str(e)}"

@@ -61,7 +61,7 @@ class JDAnalysisAgent:
             
 
             # Save analysis to S3 & DynamoDB
-            analysis_key = f"{state['job_id']}/{state['candidate_id']}/jd_analysis.json"
+            analysis_key = f"s3://{os.getenv('S3_BUCKET_NAME')}/{state['job_id']}/{state['candidate_id']}/jd_analysis.json"
             try:
                 # Save detailed analysis to S3
                 if not state.get('s3_client').put_object(
