@@ -7,8 +7,8 @@ import json
 from typing import Dict, Any, Tuple
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from utils.aws.s3_client import S3Client
-from utils.aws.dynamo_client import DynamoClient
+from utils.s3_client import S3Client
+from utils.dynamo_client import DynamoClient
 from ..state import ResumeProcessorState, update_state, add_tool_message
 from prompts.cultural_agent_prompt import CULTURAL_AGENT_PROMPT
 
@@ -135,6 +135,9 @@ class CulturalAgent:
                 json_str = json_str[7:-3]  # Remove ```json and ``` markers
             elif json_str.startswith('```'):
                 json_str = json_str[3:-3]  # Remove ``` markers
+            
+            if json_str.endswith('```'):
+                json_str = json_str[:-3]  # Remove ``` markers
             
             analysis_data = json.loads(json_str)
             

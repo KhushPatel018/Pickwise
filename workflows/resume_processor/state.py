@@ -6,8 +6,8 @@ from typing import TypedDict, Annotated, Sequence, Dict, Any, Optional
 from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, ToolMessage
 from operator import add as add_messages
 import logging
-from utils.aws.s3_client import S3Client
-from utils.aws.dynamo_client import DynamoClient
+from utils.s3_client import S3Client
+from utils.dynamo_client import DynamoClient
 logger = logging.getLogger(__name__)
 
 class ResumeProcessorState(TypedDict):

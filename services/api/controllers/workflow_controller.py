@@ -4,8 +4,11 @@ from ..models.workflow_request import WorkflowRequest
 from ..models.workflow_response import WorkflowResponse
 from workflows.resume_processor.workflow import ResumeProcessorWorkflow
 from ..services.workflow_service import WorkflowService
+from utils.logger import get_logger
 
 router = APIRouter()
+
+logger = get_logger(__name__)
 
 @router.post("/workflows/resume_processor/run", response_model=WorkflowResponse)
 async def run_workflow(request: WorkflowRequest) -> WorkflowResponse:

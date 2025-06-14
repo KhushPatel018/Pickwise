@@ -10,7 +10,6 @@ from ..consts import (
     DEFAULT_ABSOLUTE_RATING_THRESHOLD,
     DEFAULT_ABSOLUTE_RATING_ERROR_BOUNDARY
 )
-from utils.aws.dynamo_client import update_candidate_status
 
 logger = logging.getLogger(__name__)
 

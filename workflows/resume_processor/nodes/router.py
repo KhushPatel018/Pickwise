@@ -4,7 +4,7 @@ Makes decisions based on JD analysis score.
 """
 import logging
 from typing import Dict, Any, Tuple
-from utils.aws.dynamo_client import DynamoClient
+from utils.dynamo_client import DynamoClient
 
 logger = logging.getLogger(__name__)
 

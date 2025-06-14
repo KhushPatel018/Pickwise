@@ -7,7 +7,7 @@ import json
 import logging
 from typing import Dict, Any, Optional, List
 from urllib.parse import urlparse
-from ..config import load_config
+from .config import load_config
 
 logger = logging.getLogger(__name__)
 

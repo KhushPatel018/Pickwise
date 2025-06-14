@@ -20,7 +20,9 @@ def load_config():
         'AWS_ACCESS_KEY_ID',
         'AWS_SECRET_ACCESS_KEY',
         'S3_BUCKET_NAME',
-        'DYNAMODB_TABLE_NAME'
+        'DYNAMODB_TABLE_NAME',
+        'AWS_SESSION_TOKEN',
+        'OPENAI_API_KEY',
     ]
     
     # Check for missing variables

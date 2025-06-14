@@ -72,14 +72,21 @@ class JDAnalysisAgent:
                     state['error_message'] = f"[JD Analysis Agent] Failed to save analysis to S3: {analysis_key} with error: {str(e)}"
                     state['overall_status'] = 'FAILED'
                     return state, 'end'
+                
+                state['jd_analysis_url'] = analysis_key
+                verdict = "APPROVED" if analysis_data['Verdict'] == True else "REJECTED"
 
                 # Update status in DynamoDB to track progress
                 if not state.get('dynamo_client').update_item(
                     key={'candidate_id': state['candidate_id']},
-                    update_expression='SET analysis_saved = :saved, analysis_url = :url',
-                    expression_values={':saved': True, ':url': analysis_key}
+                    update_expression='SET jd_analysis_score = :score, jd_analysis_url = :url, jd_analysis_verdict = :verdict',
+                    expression_values={
+                        ':score': state['jd_score'], ':url': analysis_key, ':verdict': verdict
+                    }
                 ):
-                    logger.error("Failed to update analysis saved status in DynamoDB") 
+                    logger.error(f"[JD Analysis Agent] Failed to update analysis saved status in DynamoDB: {str(e)}") 
+                    state['error_message'] = f"[JD Analysis Agent] Failed to update analysis saved status in DynamoDB: {str(e)}"
+                    state['overall_status'] = 'FAILED'
                     return state, 'end'
 
             except Exception as e:
@@ -106,13 +113,47 @@ class JDAnalysisAgent:
         Returns:
             Dict[str, Any]: Structured analysis data
         """
-        # Implementation depends on the expected output format
-        # This is a placeholder - implement according to your needs
-        # TODO: Implement this @Ankush
-        return {
-            'overall_score': 0.0,  # Calculate from result
-            'skill_matches': [],   # Extract from result
-            'experience_matches': [],  # Extract from result
-            'education_matches': [],   # Extract from result
-            'analysis_summary': ''     # Extract from result
-        } 
+        try:
+            # Extract JSON from the response
+            json_str = result.strip()
+            if json_str.startswith('```json'):
+                json_str = json_str[7:-3]  # Remove ```json and ``` markers
+            elif json_str.startswith('```'):
+                json_str = json_str[3:-3]  # Remove ``` markers
+            
+            if json_str.endswith('```'):
+                json_str = json_str[:-3]  # Remove ``` markers
+
+            analysis_data = json.loads(json_str)
+            
+            # Validate required fields
+            required_fields = [
+                'Raw Score (out of 100)',
+                'Normalized Score (out of 10)',
+                'Score Breakdown',
+                'Detailed Scoring',
+                'Key Strengths',
+                'Areas for Improvement',
+                'Verdict'
+            ]
+            
+            for field in required_fields:
+                if field not in analysis_data:
+                    raise ValueError(f"Missing required field: {field}")
+            
+            return analysis_data
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON from LLM response: {str(e)}")
+            return {
+                "status": "FAILED",
+                "message": f"Failed to parse JSON from LLM response: {str(e)}",
+                "scores": {}
+            }
+        except Exception as e:
+            logger.error(f"Error parsing analysis result: {str(e)}")
+            return {
+                "status": "FAILED",
+                "message": f"Error parsing analysis result: {str(e)}",
+                "scores": {}
+            } 

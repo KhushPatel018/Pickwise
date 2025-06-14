@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from ..models.workflow_response import WorkflowResponse
-from utils.aws.s3_client import S3Client
-from utils.aws.dynamo_client import DynamoClient
+from utils.s3_client import S3Client
+from utils.dynamo_client import DynamoClient
 from workflows.resume_processor.state import ResumeProcessorState, create_initial_state
 from ..models.workflow_request import WorkflowRequest
 import json
