@@ -67,6 +67,8 @@ class WorkflowService:
 
             # Add all data to state
             state.update({
+                'job_id': request.job_id,
+                'candidate_id': request.candidate_id,
                 'resume_data': resume_data,
                 'jd_data': jd_data,
                 'core_values_data': core_values_data,

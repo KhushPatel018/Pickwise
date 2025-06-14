@@ -3,6 +3,7 @@ from typing import Dict, Any
 from ..models.workflow_request import WorkflowRequest
 from ..models.workflow_response import WorkflowResponse
 from workflows.resume_processor.workflow import ResumeProcessorWorkflow
+from ..services.workflow_service import WorkflowService
 
 router = APIRouter()
 
@@ -13,8 +14,8 @@ async def run_workflow(request: WorkflowRequest) -> WorkflowResponse:
         logger.info(f"Received workflow request: {request}")
 
         # build the state for workflow & initialize the workflow
-        state = build_state(request)
-        
+        state = WorkflowService.build_state(request)
+
         workflow = ResumeProcessorWorkflow()
 
         # run the workflow

@@ -10,7 +10,7 @@ from langchain_openai import ChatOpenAI
 from utils.aws.s3_client import S3Client
 from utils.aws.dynamo_client import DynamoClient
 from ..state import ResumeProcessorState, update_state, add_tool_message
-from prompts.cultural_agent_prompt import combined_prompt
+from prompts.cultural_agent_prompt import CULTURAL_AGENT_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class CulturalAgent:
         self.s3_client = s3_client
         self.dynamo_client = dynamo_client
         self.llm = ChatOpenAI(model_name=model_name, temperature=temperature)
-        self.prompt = combined_prompt
+        self.prompt = CULTURAL_AGENT_PROMPT
 
     def analyze_cultural_fit(self, state: ResumeProcessorState) -> Tuple[ResumeProcessorState, str]:
         """
@@ -50,9 +50,9 @@ class CulturalAgent:
             # Prepare input for LLM
             prompt_input = {
                 'resume_json': json.dumps(state['resume_data'], indent=2),
-                'core_values_json': json.dumps(state['core_values'], indent=2),
-                'uniqueness_definition': state['uniqueness_description'].get('description', ''),
-                'custom_criteria': json.dumps(state['custom_criteria'], indent=2)
+                'core_values_json': json.dumps(state['core_values_data'], indent=2),
+                'uniqueness_definition': json.dumps(state['uniqueness_data']),
+                'custom_criteria': json.dumps(state['custom_criteria_data'], indent=2)
             }
 
             # Get LLM analysis
@@ -62,40 +62,61 @@ class CulturalAgent:
             # Parse and validate analysis result
             try:
                 analysis_data = self._parse_analysis_result(analysis_result)
+
+                # update the state with scores
+                state['cultural_fit_score'] = analysis_data['cultural_fit_score']
+                state['uniqueness_score'] = analysis_data['uniqueness_score']
+                state['custom_criteria_scores'] = analysis_data['custom_criteria_scores']
             except Exception as e:
-                logger.error(f"Failed to parse cultural analysis result: {str(e)}")
-                return self._handle_error(state, 'Failed to parse cultural analysis'), 'end'
+                logger.error(f"[Cultural Agent] Failed to parse cultural analysis result: {str(e)}")
+                state['error_message'] = f"[Cultural Agent] Failed to parse cultural analysis result: {str(e)}"
+                state['overall_status'] = 'FAILED'
+                return state, 'end'
 
-            # Save analysis to S3
-            analysis_key = f"analysis/{state['candidate_id']}/cultural_analysis.json"
-            if not self.s3_client.put_object(analysis_key, json.dumps(analysis_data, indent=2)):
-                logger.error("Failed to save cultural analysis to S3")
-                return self._handle_error(state, 'Failed to save cultural analysis'), 'end'
+            # Save analysis to S3 & DynamoDB
+            try:
+                analysis_key = f"{state['job_id']}/{state['candidate_id']}/cultural_analysis.json"
+                if not self.s3_client.put_object(analysis_key, json.dumps(analysis_data, indent=2)):
+                    logger.error(f"[Cultural Agent] Failed to save cultural analysis to S3: {analysis_key} with error: {str(e)}")
+                    state['error_message'] = f"[Cultural Agent] Failed to save cultural analysis to S3: {analysis_key} with error: {str(e)}"
+                    state['overall_status'] = 'FAILED'
+                    return state, 'end'
+            except Exception as e:
+                logger.error(f"[Cultural Agent] Failed to save cultural analysis to S3: {analysis_key} with error: {str(e)}")
+                state['error_message'] = f"[Cultural Agent] Failed to save cultural analysis to S3: {analysis_key} with error: {str(e)}"
+                state['overall_status'] = 'FAILED'
+                return state, 'end'
 
-            # Update state with analysis results
-            updated_state = update_state(
-                state,
-                cultural_analysis=analysis_data,
-                cultural_fit_score=analysis_data['cultural_fit_score'] / 10.0,  # Normalize to 0-1
-                uniqueness_score=analysis_data['uniqueness_score'] / 10.0,  # Normalize to 0-1
-                custom_criteria_scores={
-                    item['name']: item['score'] / 10.0  # Normalize to 0-1
-                    for item in analysis_data['custom_criteria_scores']
-                }
-            )
+            # Update status in DynamoDB to track progress
+            try:
+                if not self.dynamo_client.update_item(
+                    key={'candidate_id': state['candidate_id']},
+                    # set analysis_url, score and their justification
+                    update_expression='SET analysis_url = :url, cultural_fit_score = :cultural_fit_score, uniqueness_score = :uniqueness_score, custom_criteria_scores = :custom_criteria_scores, cultural_fit_justification = :cultural_fit_justification, uniqueness_justification = :uniqueness_justification',
+                    expression_values={
+                        ':url': analysis_key, 
+                        ':cultural_fit_score': state['cultural_fit_score'], 
+                        ':uniqueness_score': state['uniqueness_score'], 
+                        ':custom_criteria_scores': state['custom_criteria_scores'], 
+                        ':cultural_fit_justification': analysis_data['cultural_fit_justification'], 
+                        ':uniqueness_justification': analysis_data['uniqueness_justification']
+                    }
+                    ):
+                    logger.error("Failed to update analysis saved status in DynamoDB") 
+                    return state, 'end'
+            except Exception as e:
+                logger.error(f"[Cultural Agent] Failed to update analysis saved status in DynamoDB: {str(e)}")
+                state['error_message'] = f"[Cultural Agent] Failed to update analysis saved status in DynamoDB: {str(e)}"
+                state['overall_status'] = 'FAILED'
+                return state, 'end'
 
-            # Update database
-            self._update_db_status(
-                state['candidate_id'],
-                'CULTURAL_ANALYZED',
-                'Cultural analysis completed'
-            )
-
-            return updated_state, 'absolute_rating'
+            return state, 'absolute_rating'
 
         except Exception as e:
             logger.error(f"Unexpected error in cultural analysis: {str(e)}")
-            return self._handle_error(state, str(e)), 'end'
+            state['error_message'] = f"[Cultural Agent] Unexpected error: {str(e)}"
+            state['overall_status'] = 'FAILED'
+            return state, 'end' 
 
     def _parse_analysis_result(self, result: str) -> Dict[str, Any]:
         """
@@ -139,46 +160,3 @@ class CulturalAgent:
         except Exception as e:
             logger.error(f"Error parsing analysis result: {str(e)}")
             raise
-
-    def _handle_error(self, state: ResumeProcessorState, error_message: str) -> ResumeProcessorState:
-        """
-        Handle errors in cultural analysis.
-        
-        Args:
-            state: Current state
-            error_message: Error message
-            
-        Returns:
-            ResumeProcessorState: Updated state with error
-        """
-        self._update_db_status(
-            state['candidate_id'],
-            'ERROR',
-            f'Cultural analysis error: {error_message}'
-        )
-        return update_state(
-            state,
-            status='ERROR',
-            error=error_message
-        )
-
-    def _update_db_status(self, candidate_id: str, status: str, message: str) -> None:
-        """
-        Update candidate status in database.
-        
-        Args:
-            candidate_id: Candidate ID
-            status: New status
-            message: Status message
-        """
-        try:
-            self.dynamo_client.update_item(
-                key={'candidate_id': candidate_id},
-                update_expression='SET #status = :status, message = :message',
-                expression_values={
-                    ':status': status,
-                    ':message': message
-                }
-            )
-        except Exception as e:
-            logger.error(f"Failed to update database status: {str(e)}") 

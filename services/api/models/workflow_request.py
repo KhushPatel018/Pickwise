@@ -1,6 +1,7 @@
 from pydantic import BaseModel
  
 class WorkflowRequest(BaseModel):
+    job_id: str
     candidate_id: str
     resume_s3_url: str
     jd_s3_url: str

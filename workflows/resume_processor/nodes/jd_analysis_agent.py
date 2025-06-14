@@ -4,11 +4,11 @@ Analyzes resume against job description using LLM.
 """
 import logging
 from typing import Dict, Any, Tuple
-from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from prompts.jd_agent_prompt import JD_AGENT_PROMPT
+from prompts.constants import SCORING_RUBRIC, JD_OUTPUT_FORMAT
+import json
 from ..state import ResumeProcessorState
-
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class JDAnalysisAgent:
             llm: Configured LLM instance
         """
         self.llm = llm
-        self.prompt = PromptTemplate.from_template(JD_AGENT_PROMPT)
+        self.prompt = JD_AGENT_PROMPT
 
     def analyze_resume(self, state: ResumeProcessorState) -> Tuple[ResumeProcessorState, str]:
         """
@@ -37,84 +37,63 @@ class JDAnalysisAgent:
             # Prepare input for LLM
             prompt_input = {
                 'resume': state['resume_data'],
-                'job_description': state['jd_data']
+                'job_description': state['jd_data'],
+                'scoring_rubric': json.dumps(SCORING_RUBRIC, indent=2),
+                'output_format': json.dumps(JD_OUTPUT_FORMAT, indent=2)
             }
 
-            # Get LLM analysis
+            # Get LLM analysis using instance prompt template
             chain = self.prompt | self.llm
             analysis_result = chain.invoke(prompt_input)
 
             # Parse analysis result
             try:
                 analysis_data = self._parse_analysis_result(analysis_result)
+                # update the state with scores
+                state['jd_score'] = analysis_data['Normalized Score (out of 10)']
+
             except Exception as e:
                 logger.error(f"Failed to parse analysis result: {str(e)}")
-                update_candidate_status(
-                    state.get('dynamo_client'),
-                    state['candidate_id'],
-                    'ERROR',
-                    'Failed to parse analysis'
-                )
+                state['error_message'] = f"[JD Analysis Agent] Failed to parse analysis result: {str(e)}"
+                state['overall_status'] = 'FAILED'
                 return state, 'end'
+            
+            
 
-            # Save analysis using utility function
-            analysis_key = f"analysis/{state['candidate_id']}/jd_analysis.json"
+            # Save analysis to S3 & DynamoDB
+            analysis_key = f"{state['job_id']}/{state['candidate_id']}/jd_analysis.json"
             try:
                 # Save detailed analysis to S3
                 if not state.get('s3_client').put_object(
                     analysis_key, 
                     json.dumps(analysis_data, indent=2)
                 ):
-                    logger.error("Failed to save analysis to S3")
-                    update_candidate_status(
-                        state.get('dynamo_client'),
-                        state['candidate_id'],
-                        'ERROR',
-                        'Failed to save analysis to S3'
-                    )
+                    logger.error(f"[JD Analysis Agent] Failed to save analysis to S3: {analysis_key} with error: {str(e)}")
+                    state['error_message'] = f"[JD Analysis Agent] Failed to save analysis to S3: {analysis_key} with error: {str(e)}"
+                    state['overall_status'] = 'FAILED'
                     return state, 'end'
 
                 # Update status in DynamoDB to track progress
                 if not state.get('dynamo_client').update_item(
                     key={'candidate_id': state['candidate_id']},
-                    update_expression='SET analysis_saved = :saved',
-                    expression_values={':saved': True}
+                    update_expression='SET analysis_saved = :saved, analysis_url = :url',
+                    expression_values={':saved': True, ':url': analysis_key}
                 ):
                     logger.error("Failed to update analysis saved status in DynamoDB") 
                     return state, 'end'
 
             except Exception as e:
                 logger.error(f"Error saving analysis: {str(e)}")
-                update_candidate_status(
-                    state.get('dynamo_client'),
-                    state['candidate_id'],
-                    'ERROR',
-                    f'Failed to save analysis: {str(e)}'
-                )
+                state['error_message'] = f"[JD Analysis Agent] Failed to save analysis: {str(e)}"
+                state['overall_status'] = 'FAILED'
                 return state, 'end'
-
-            # Update state with analysis results
-            state['analysis_data'] = analysis_data
-            state['jd_score'] = analysis_data['overall_score']
             
-            # Update status using utility function
-            update_candidate_status(
-                state.get('dynamo_client'),
-                state['candidate_id'],
-                'ANALYZED',
-                'JD analysis completed'
-            )
-
             return state, 'router'
 
         except Exception as e:
             logger.error(f"Unexpected error in JD analysis: {str(e)}")
-            update_candidate_status(
-                state.get('dynamo_client'),
-                state['candidate_id'],
-                'ERROR',
-                f'Unexpected error: {str(e)}'
-            )
+            state['error_message'] = f"[JD Analysis Agent] Unexpected error: {str(e)}"
+            state['overall_status'] = 'FAILED'
             return state, 'end'
 
     def _parse_analysis_result(self, result: str) -> Dict[str, Any]:
@@ -129,7 +108,7 @@ class JDAnalysisAgent:
         """
         # Implementation depends on the expected output format
         # This is a placeholder - implement according to your needs
-        # TODO: Implement this
+        # TODO: Implement this @Ankush
         return {
             'overall_score': 0.0,  # Calculate from result
             'skill_matches': [],   # Extract from result

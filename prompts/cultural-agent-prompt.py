@@ -1,6 +1,6 @@
 from langchain.prompts import PromptTemplate
 
-combined_prompt = PromptTemplate(
+CULTURAL_AGENT_PROMPT = PromptTemplate(
 input_variables=[
     "resume_json",
     "core_values_json",

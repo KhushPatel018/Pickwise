@@ -35,6 +35,7 @@ class ResumeProcessorState(TypedDict):
     absolute_grading_error_boundary: Optional[float]
     absolute_grading_threshold: Optional[float]
     scores: Optional[Dict[str, Any]]
+    job_id: str
     candidate_id: str
     candidate_status: str
     s3_client: S3Client

@@ -1,25 +1,24 @@
+"""
+Prompt template for JD analysis agent.
+"""
 from langchain.prompts import PromptTemplate
-from .constants import SCORING_RUBRIC, JD_OUTPUT_FORMAT
-import json
 
-JD_AGENT_PROMPT = PromptTemplate(
-    input_variables=["resume_json", "job_description_json"],
-    template="""
+JD_AGENT_PROMPT = PromptTemplate.from_template("""
 You are an expert AI recruiter following strict Applicant Tracking System (ATS) logic combined with semantic reasoning.
 
 Your task is to analyze how well a candidate's resume matches a job description using ATS-compliant scoring rules, while also recognizing related experience when explicitly evidenced.
 
 ---
 Resume (JSON input):
-{resume_json}
+{resume}
 
 Job Description (JSON input):
-{job_description_json}
+{job_description}
 ---
 
 ## SCORING RUBRIC (TOTAL: 100 pts; normalize to 10 scale)
 
-{scoring_rubric_json}
+{scoring_rubric}
 
 ### STRICT EVALUATION RULES:
 
@@ -62,22 +61,11 @@ If the domain is entirely mismatched, give `false`.
 
 ## OUTPUT FORMAT (Strict JSON)
 
-{output_format_json}
+{output_format}
 
 IMPORTANT:
 - All scoring must be directly traceable to resume content.
 - Do not fabricate information.
 - Ensure total category scores match sum of sub-scores.
 - Only return clean, valid JSON. No extra text or markdown.
-"""
-)
-
-# Format the JSON constants
-scoring_rubric_json = json.dumps(SCORING_RUBRIC, indent=2)
-output_format_json = json.dumps(JD_OUTPUT_FORMAT, indent=2)
-
-# Update the template with the formatted values
-JD_AGENT_PROMPT.template = JD_AGENT_PROMPT.template.format(
-    scoring_rubric_json=scoring_rubric_json,
-    output_format_json=output_format_json
-)
+""")
