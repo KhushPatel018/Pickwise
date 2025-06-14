@@ -1,0 +1,12 @@
+{
+    "uniqueness_definition": "Uniqueness in this context refers to candidates who possess practical, in-depth experience with advanced Large Language Model (LLM) technologies and frameworks. This includes not only proficiency with these tools, but also tangible project work or real-world contributions demonstrating applied expertise.",
+    "examples": [
+      "Hands-on experience building applications with LangChain, LangGraph, or LangFlow",
+      "Successfully implemented Retrieval-Augmented Generation (RAG) in production projects",
+      "Contributed code, documentation, or modules to LLM open source projects",
+      "Published or demoed real-world LLM-powered tools, apps, or workflows",
+      "Integrated LLMs into enterprise or client-facing solutions with measurable impact",
+      "Created educational content or led workshops on LLMs and their ecosystem",
+      "Demonstrated innovative use cases or novel architectures using LLM frameworks"
+    ]
+  }

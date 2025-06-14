@@ -1,0 +1,38 @@
+{
+    "title": "Technical Lead",
+    "location": "Bengaluru, India",
+    "reporting_to": "Director of Engineering",
+    "experience": "6-10 years",
+    "responsibilities": [
+      "Lead a team of 3-5 software engineers and own delivery of moderately complex software products",
+      "Review and approve estimates, designs, code, and test cases",
+      "Translate requirements into technical tasks",
+      "Design scalable, available, performant cloud-based architectures",
+      "Deliver MVPs in weeks, not months",
+      "Work closely with leadership and customer teams",
+      "Collaborate with industry veterans to make technical decisions"
+    ],
+    "culture_fit": [
+      "Eager to work with experienced software leaders",
+      "Excited to learn new technologies and architectures",
+      "Enjoy solving complex technical challenges",
+      "Value remote/hybrid collaboration",
+      "Bring energy and open communication to teams"
+    ],
+    "required_skills": [
+      "Team leadership",
+      "Cloud architecture design",
+      "Agile software delivery",
+      "Backend development (Java, Spring, Python/Django, Node.js, .NET)",
+      "Frontend development (React, Angular, JavaScript, TypeScript)",
+      "Database systems (PostgreSQL, MySQL, Oracle, MongoDB, DynamoDB, Cassandra)"
+    ],
+    "preferred_skills": [
+      "Mobile development (Flutter, React Native, Android, Swift, Objective-C)",
+      "DevOps tooling (AWS, Docker, Kubernetes, Jenkins, Bamboo, CodePipeline)",
+      "Testing tools (Jest, Cypress)",
+      "UI libraries (Material-UI, Bootstrap)",
+      "Project tracking and collaboration tools (JIRA, Crucible)"
+    ],
+    "education": "BS in Computer Science or related field"
+  }

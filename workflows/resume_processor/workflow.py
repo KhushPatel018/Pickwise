@@ -11,7 +11,11 @@ from .nodes.cultural_agent import CulturalAgent
 from .nodes.absolute_rating import AbsoluteRatingNode
 from .state import ResumeProcessorState
 from langchain_openai import ChatOpenAI
+import os
+from utils.config import load_config
+
 logger = logging.getLogger(__name__)
+load_config()
 
 class ResumeProcessorWorkflow:
     def __init__(
@@ -26,7 +30,7 @@ class ResumeProcessorWorkflow:
             weights: Weights for different scoring components
         """
         # Initialize nodes
-        self.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.4, top_p=0.9)
+        self.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.4, top_p=0.9, api_key=os.getenv('OPENAI_API_KEY'))
         self.jd_analysis = JDAnalysisAgent(self.llm)
         self.router = RouterNode()
         self.cultural_agent = CulturalAgent(self.llm)

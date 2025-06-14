@@ -1,0 +1,12 @@
+{
+    "custom_criterias": [
+        {
+            "name": "Past Success",
+            "description": "In past we have noticed that we hired the candidates who come from there collages are became great employees and have been successful in their roles. So we want to hire the candidates who come from there collages. here is the Ranked list of collages that we have hired from in past: \n1. DAIICT, Gandhinagar \n2. MNIT Jaipur \n3. VIT Vellore \n4. NIT Patna \n5. Manipal University \n6. M.S. Ramaiah Institute of Technology \n7. Jaypee Institute of Information Technology \n8. Thapar Institute of Engineering and Technology"
+        },
+        {
+            "name": "Diversity Hiring",
+            "description": "We have observed that building teams with members from diverse backgrounds and experiences leads to greater innovation and success within our company. We want to prioritize candidates who bring diversity to the organization in terms of gender, ethnicity, socioeconomic background, educational path, or life experiences. Candidates who have overcome unique challenges or contributed to inclusive environments are especially valued.\n\nSpecific examples include:\n1. Women and non-binary candidates applying for technical roles\n2. Candidates from underrepresented communities or minority groups\n3. First-generation college graduates\n4. Candidates who studied at colleges or regions not traditionally represented in our company\n5. Candidates who have demonstrated leadership or participation in diversity, equity, and inclusion (DEI) initiatives\n6. Candidates with international education or work experience\n7. Individuals who have overcome significant personal or professional challenges"
+        }
+    ]
+}

@@ -1,0 +1,117 @@
+{
+    "name": "Subrata Saha",
+    "email": "saha.subrata@gmail.com",
+    "phone": "09886643779",
+    "address": "Bengaluru, India",
+    "linkedin": "",
+    "summary": "Started career in a telecom startup Ipunity (now Movius) as a full stack developer. A passionate Java, Scala, Python developer for 14 years only in product based companies. Got opportunities to develop 2 products from scratch (Insight and MDM for meta data aggregation). Expertise in writing optimized code with best possible design and algorithm in agile team with TDD.",
+    "skills": [
+        "Java",
+        "Scala",
+        "Python",
+        "OOAD",
+        "Architecture",
+        "Integration",
+        "Security patterns",
+        "REST architecture",
+        "Spring Boot",
+        "JPA",
+        "Apache Kafka",
+        "JMS",
+        "Apache ActiveMQ",
+        "Apache Spark",
+        "Cassandra",
+        "HDFS",
+        "AWS",
+        "Helm chart",
+        "Terraform",
+        "Kubernetes",
+        "Istio"
+    ],
+    "experience": [
+        {
+            "company": "Oracle",
+            "role": "Micro Service developer for IAM and KMS",
+            "location": "Bangalore",
+            "duration": "Since May 2018",
+            "responsibilities": [
+                "Managing LCM operation for all rest endpoints to create Oauth client and resource for identity requirement.",
+                "Autz layer for microservice for condition based authorization for each rest call based on policy evaluation.",
+                "Enabling Service Mesh and Side car for microservices for service to service encrypted communication using Istio.",
+                "Generating MEK/DEK related rest services for KMS to talk to HSM using Luna client.",
+                "Deploying Services in Oracle cloud using helm chart, terraform, kubernetes, istio."
+            ]
+        },
+        {
+            "company": "Cisco",
+            "role": "Microservice developer for on prem and AWS in Head-end",
+            "location": "Bangalore",
+            "duration": "Jan 2010 - Jan 2018",
+            "responsibilities": [
+                "Creating micro server components for sending targeted meta data for OTT solutions.",
+                "Practiced non-negotiable factors like writing optimal data structure, best design principles, optimal server hit, optimal memory usage and quality code.",
+                "Components for sending only OTT meta data to smart devices using Spring Boot, Java.",
+                "Aggregate logs from micro components and finding relevant metrics using rest, kafka, hdfs, spark, scala, oozie.",
+                "Micro service component for sending OTT rich meta data using Spring boot and Eureka server.",
+                "Exposing API to smart devices directly to consume using spring rest API over hypermedia as json.",
+                "Designing and coding of various in house custom frameworks in java and other components and automation using python.",
+                "JVM Performance tuning for GC before every major release.",
+                "Coaching, mentoring, pair programming on critical feature."
+            ]
+        },
+        {
+            "company": "Facetime communication (Actiance)",
+            "role": "Developer",
+            "location": "Bangalore",
+            "duration": "July 2005 - Jan 2008",
+            "responsibilities": [
+                "Developed product Insight (Data lake from various data center) from scratch.",
+                "ETL reporting tool developed from scratch.",
+                "Designed and coded the transport part using Apache ActiveMQ and roll up engine using Java."
+            ]
+        },
+        {
+            "company": "Ipunity",
+            "role": "Developer",
+            "location": "Bangalore",
+            "duration": "Jan 2008 - Jan 2010",
+            "responsibilities": [
+                "Developed tons of feature on UnifiedMessaging product.",
+                "Increased interaction between sub systems by 60% by developing JMS Message bus using java, oracle advanced queue.",
+                "Developed SMS sending from product web UI.",
+                "Sending video mail from web UI using java mail."
+            ]
+        }
+    ],
+    "education": [
+        {
+            "degree": "Master in Computer Application",
+            "institution": "GU",
+            "year": "January 2005",
+            "details": "Rank-6th, Distinguished programmer of the class and secured highest ever mark in Data structure till date."
+        },
+        {
+            "degree": "PGDIT",
+            "institution": "MAHE",
+            "year": "December 2001",
+            "details": "Studied Digital system and Java programming with Data structure."
+        },
+        {
+            "degree": "B.Sc (Physics)",
+            "institution": "",
+            "year": "December 2000",
+            "details": "Studied Astrophysics, Modern Physics, Atomic Physics, Heat and Thermodynamics, Electronics, Quantum mechanics etc."
+        }
+    ],
+    "certifications": [],
+    "projects": [
+        {
+            "name": "Stars Messenger",
+            "description": "Developed https://itunes.apple.com/app/stars-messenger/id919659172 using Kraken and XMPP."
+        },
+        {
+            "name": "Android App for delivery tracking",
+            "description": "Developed using Materialised design, Retrofit, FCM, Fabric, Greenrobot, Map and middleware in AWS using event driven architecture using kafka and reactive framework webflux for spring boot."
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+{
+    "weights": {
+        "jd_score_weight": 4.0,    
+        "cultural_fit_score_weight": 2.0,  
+        "uniqueness_score_weight": 3.0,    
+        "custom_criteria_score_weight": {  
+            "Past Success": 0.5,
+            "Diversity Hiring": 0.5
+        }
+    },
+    "jd_threshold": 6,
+    "absolute_grading_error_boundary": 5.0,
+    "absolute_grading_threshold": 65.0
+}

@@ -1,0 +1,44 @@
+{
+    "company_values": [
+        {
+            "value": "Take ownership",
+            "description": "Take responsibility for tasks, outcomes, and problems. Act like an owner and proactively solve issues."
+        },
+        {
+            "value": "Learn and be curious",
+            "description": "Continuously seek new knowledge, ask questions, and explore better ways of doing things. Stay open-minded and eager to improve."
+        },
+        {
+            "value": "Put customers first",
+            "description": "Always prioritize customer needs, satisfaction, and long-term trust. Make decisions that create value for customers."
+        },
+        {
+            "value": "Think big",
+            "description": "Look beyond short-term or small goals. Aim for bold, ambitious solutions that can create large-scale impact."
+        },
+        {
+            "value": "Commit, lead every day",
+            "description": "Stay dedicated to your work. Lead by example daily, showing consistency, responsibility, and initiative."
+        },
+        {
+            "value": "Bias for action",
+            "description": "Prefer taking quick, thoughtful action over waiting too long. Make progress even when full information isn't available."
+        },
+        {
+            "value": "Show perseverance & grit",
+            "description": "Stay persistent through challenges and setbacks. Keep going despite difficulties or failures."
+        },
+        {
+            "value": "Show empathy",
+            "description": "Understand and consider the feelings, perspectives, and situations of others. Act with kindness and compassion."
+        },
+        {
+            "value": "Act with integrity",
+            "description": "Be honest, ethical, and transparent. Do the right thing even when it's hard or when no one is watching."
+        },
+        {
+            "value": "Be open to criticism",
+            "description": "Accept feedback and criticism without defensiveness. Use it as a tool for growth and self-improvement."
+        }
+    ]
+}
