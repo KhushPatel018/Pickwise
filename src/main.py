@@ -32,6 +32,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",  # Updated to use the correct module path
         host=os.getenv('HOST', 'localhost'),
-        port=int(os.getenv('PORT', 8000)),
+        port=int(os.getenv('PORT', 5002)),
         reload=True  # Enable auto-reload during development
     ) 
