@@ -1,4 +1,4 @@
-# LangGraph Multi-Agent Workflow Scaffold
+# LangGraph Multi-Agent Workflow
 
 ## Project Structure
 
