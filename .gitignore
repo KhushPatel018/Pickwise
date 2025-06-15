@@ -110,3 +110,5 @@ htmlcov/
 
 # Project specific
 .cursor/
+
+notebooks/
